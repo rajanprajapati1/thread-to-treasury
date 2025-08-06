@@ -12,6 +12,25 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Eye, EyeOff, User, Mail, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+interface LoginErrors {
+  general?: string;
+  email?: string;
+  password?: string;
+}
+
+interface SignupErrors {
+  general?: string;
+  name?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+}
+
+interface ErrorState {
+  login: LoginErrors;
+  signup: SignupErrors;
+}
+
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -31,7 +50,7 @@ const Login = () => {
     confirmPassword: ''
   });
 
-  const [errors, setErrors] = useState({
+  const [errors, setErrors] = useState<ErrorState>({
     login: {},
     signup: {}
   });
@@ -46,7 +65,7 @@ const Login = () => {
     setIsLoading(true);
     setErrors(prev => ({ ...prev, login: {} }));
 
-    const newErrors: any = {};
+    const newErrors: LoginErrors = {};
 
     if (!loginData.email) {
       newErrors.email = 'Email is required';
@@ -97,7 +116,7 @@ const Login = () => {
     setIsLoading(true);
     setErrors(prev => ({ ...prev, signup: {} }));
 
-    const newErrors: any = {};
+    const newErrors: SignupErrors = {};
 
     if (!signupData.name) {
       newErrors.name = 'Name is required';
@@ -163,6 +182,10 @@ const Login = () => {
   const handleGuestCheckout = () => {
     localStorage.setItem('guestUser', 'true');
     navigate('/cart');
+  };
+
+  const handleRememberMeChange = (checked: boolean | "indeterminate") => {
+    setRememberMe(checked === true);
   };
 
   return (
@@ -265,7 +288,7 @@ const Login = () => {
                         <Checkbox
                           id="remember"
                           checked={rememberMe}
-                          onCheckedChange={setRememberMe}
+                          onCheckedChange={handleRememberMeChange}
                         />
                         <label htmlFor="remember" className="text-sm">Remember me</label>
                       </div>

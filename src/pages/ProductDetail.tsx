@@ -16,68 +16,68 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
 
   // Mock product data
-  const product = {
-    id: 1,
-    name: 'Elegant Silk Saree with Gold Border',
-    price: 2999,
-    originalPrice: 4999,
-    images: [
-      'https://images.unsplash.com/photo-1583391733956-6c78276477e3?w=600&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=600&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1594736797933-d0401ba9b0b6?w=600&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1583391733956-6c78276477e3?w=600&h=800&fit=crop'
-    ],
-    category: 'Sarees',
-    fabric: 'Pure Silk',
-    occasion: 'Wedding',
-    color: 'Deep Red with Gold',
-    rating: 4.8,
-    reviews: 124,
-    bestseller: true,
-    description: 'This exquisite silk saree features intricate gold border work and premium quality fabric. Perfect for weddings and special occasions, it combines traditional elegance with modern sophistication.',
-    features: [
-      'Pure silk fabric with gold zari work',
-      'Intricate border design',
-      '6.3 meters saree with 0.8 meter blouse piece',
-      'Dry clean only',
-      'Made in India'
-    ],
-    specifications: {
-      'Fabric': 'Pure Silk',
-      'Work': 'Zari Border',
-      'Length': '6.3 meters',
-      'Blouse': '0.8 meter unstitched',
-      'Care': 'Dry clean only',
-      'Color': 'Deep Red with Gold'
-    }
-  };
+const product = {
+  id: 1,
+  name: 'Elegant Silk Saree with Gold Border',
+  price: 2999,
+  originalPrice: 4999,
+  images: [
+    'https://manyavar.scene7.com/is/image/manyavar/SB17229_421-BEIGE_301.21204_04-09-2024-20-16:283x395?&dpr=on,2',
+    'https://manyavar.scene7.com/is/image/manyavar/SB17393_439-INDIGO+BLUE_301.0652_27-07-2024-17-29:283x395?&dpr=on,2',
+    'https://cdn.shopify.com/s/files/1/2542/7564/products/38_c2999ea7-7cf2-4235-8a8d-5dfb18349049.png?v=1684993442',
+    'https://www.aachho.com/cdn/shop/products/2_108317f0-909d-4b52-aaf0-a920eedea1f3_720x.png?v=1684506926'
+  ],
+  category: 'Sarees',
+  fabric: 'Pure Silk',
+  occasion: 'Wedding',
+  color: 'Deep Red with Gold',
+  rating: 4.8,
+  reviews: 124,
+  bestseller: true,
+  description: 'This exquisite silk saree features intricate gold border work and premium quality fabric. Perfect for weddings and special occasions, it combines traditional elegance with modern sophistication.',
+  features: [
+    'Pure silk fabric with gold zari work',
+    'Intricate border design',
+    '6.3 meters saree with 0.8 meter blouse piece',
+    'Dry clean only',
+    'Made in India'
+  ],
+  specifications: {
+    'Fabric': 'Pure Silk',
+    'Work': 'Zari Border',
+    'Length': '6.3 meters',
+    'Blouse': '0.8 meter unstitched',
+    'Care': 'Dry clean only',
+    'Color': 'Deep Red with Gold'
+  }
+};
 
-  const relatedProducts = [
-    {
-      id: 2,
-      name: 'Designer Cotton Suit',
-      price: 1899,
-      image: 'https://images.unsplash.com/photo-1594736797933-d0401ba9b0b6?w=300&h=400&fit=crop'
-    },
-    {
-      id: 3,
-      name: 'Georgette Party Wear',
-      price: 3499,
-      image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=300&h=400&fit=crop'
-    },
-    {
-      id: 4,
-      name: 'Traditional Cotton Saree',
-      price: 1299,
-      image: 'https://images.unsplash.com/photo-1583391733956-6c78276477e3?w=300&h=400&fit=crop'
-    },
-    {
-      id: 5,
-      name: 'Chiffon Wedding Saree',
-      price: 4999,
-      image: 'https://images.unsplash.com/photo-1583391733956-6c78276477e3?w=300&h=400&fit=crop'
-    }
-  ];
+ const relatedProducts = [
+  {
+    id: 2,
+    name: 'Designer Cotton Suit',
+    price: 1899,
+    image: 'https://www.aachho.com/cdn/shop/products/2_108317f0-909d-4b52-aaf0-a920eedea1f3_720x.png?v=1684506926'
+  },
+  {
+    id: 3,
+    name: 'Georgette Party Wear',
+    price: 3499,
+    image: 'https://manyavar.scene7.com/is/image/manyavar/SKT4944_410-BLACK_301.16831_10-02-2025-00-23:283x395?&dpr=on,2'
+  },
+  {
+    id: 4,
+    name: 'Traditional Cotton Saree',
+    price: 1299,
+    image: 'https://cdn.shopify.com/s/files/1/2542/7564/products/38_c2999ea7-7cf2-4235-8a8d-5dfb18349049.png?v=1684993442'
+  },
+  {
+    id: 5,
+    name: 'Chiffon Wedding Saree',
+    price: 4999,
+    image: 'https://manyavar.scene7.com/is/image/manyavar/SB17393_439-INDIGO+BLUE_301.0652_27-07-2024-17-29:283x395?&dpr=on,2'
+  }
+];
 
   return (
     <div className="min-h-screen bg-brand-warm-white">

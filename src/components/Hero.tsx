@@ -52,7 +52,7 @@ const Hero = () => {
             <div className="absolute inset-0 bg-gradient-to-tr from-brand-terracotta/10 to-brand-burgundy/10 rounded-3xl transform rotate-3"></div>
             <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl">
               <img
-                src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&h=600&fit=crop&crop=center"
+                src="https://manyavar.scene7.com/is/image/manyavar/SB17561_434-LIGHT+BLUE_301.20248_04-09-2024-16-27:283x395?&dpr=on,2"
                 alt="Beautiful handcrafted saree"
                 className="w-full h-[500px] object-cover"
               />

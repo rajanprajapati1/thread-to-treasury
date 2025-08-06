@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { useParams, Link } from 'react-router-dom';
 
 const collections = [
   {
@@ -41,6 +42,7 @@ const Collections = () => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {collections.map((collection, index) => (
+      
             <div
               key={index}
               className="group cursor-pointer animate-fade-up"
@@ -72,10 +74,16 @@ const Collections = () => {
                     <span className="text-lg font-semibold text-brand-terracotta">
                       {collection.price}
                     </span>
-                    <Button variant="ghost" className="text-brand-terracotta hover:text-brand-terracotta-dark group-hover:translate-x-1 transition-transform">
-                      Shop Now
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
+                  <Link to={`/product/${index}`} className="text-decoration-none">
+  <Button
+    variant="ghost"
+    className="text-brand-terracotta hover:text-brand-terracotta-dark group hover:translate-x-1 transition-transform"
+  >
+    Shop Now
+    <ArrowRight className="ml-2 h-4 w-4" />
+  </Button>
+</Link>
+
                   </div>
                 </div>
               </div>

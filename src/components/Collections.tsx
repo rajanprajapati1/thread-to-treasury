@@ -6,14 +6,14 @@ const collections = [
   {
     title: "Cotton Sarees",
     description: "Comfortable everyday elegance",
-    image: "https://images.unsplash.com/photo-1583391733956-6c78276477e3?w=600&h=400&fit=crop&crop=center",
+    image: "https://manyavar.scene7.com/is/image/manyavar/SB17561_413-PURPLE_301.6228_25-12-2024-17-12:283x395?&dpr=on,2",
     price: "Starting ₹1,299",
     tag: "Bestseller"
   },
   {
     title: "Designer Suits",
     description: "Modern cuts, traditional charm",
-    image: "https://images.unsplash.com/photo-1594736797933-d0401ba9b0b6?w=600&h=400&fit=crop&crop=center",
+    image: "https://manyavar.scene7.com/is/image/manyavar/NMSAS6454_426-T.BLUE_101.16787_27-05-2024-15-41:650x900?&dpr=on,2",
     price: "Starting ₹2,499",
     tag: "New Collection"
   },

@@ -1,13 +1,28 @@
 
-import { ShoppingBag, Search, User, Menu, Phone, Heart } from "lucide-react";
+import { ShoppingBag, Search, User, Menu, Phone, Heart, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useCart, useWishlist, useAuth } from "@/hooks/useLocalStorage";
+import { logout } from "@/services/localStorage";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const location = useLocation();
-  const [cartCount] = useState(2); // Mock cart count
-  const [wishlistCount] = useState(4); // Mock wishlist count
+  const navigate = useNavigate();
+  const { cartCount } = useCart();
+  const { wishlistCount } = useWishlist();
+  const { user, isAuthenticated, refreshAuth } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    refreshAuth();
+    navigate('/');
+  };
 
   return (
     <header className="bg-brand-warm-white border-b border-brand-sage/20 sticky top-0 z-50">
@@ -23,6 +38,9 @@ const Header = () => {
             </div>
           </div>
           <div className="flex items-center space-x-4">
+            {isAuthenticated && user && (
+              <span>Welcome, {user.name}!</span>
+            )}
             <span>Made in India 🇮🇳</span>
           </div>
         </div>
@@ -76,25 +94,48 @@ const Header = () => {
             >
               Bridal
             </Link>
-            <Link 
-              to="/orders" 
-              className={`text-brand-charcoal hover:text-brand-terracotta transition-colors font-medium ${
-                location.pathname === '/orders' ? 'text-brand-terracotta' : ''
-              }`}
-            >
-              Orders
-            </Link>
+            {isAuthenticated && (
+              <Link 
+                to="/orders" 
+                className={`text-brand-charcoal hover:text-brand-terracotta transition-colors font-medium ${
+                  location.pathname === '/orders' ? 'text-brand-terracotta' : ''
+                }`}
+              >
+                Orders
+              </Link>
+            )}
           </nav>
 
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="sm" className="hidden md:flex">
               <Search className="h-5 w-5" />
             </Button>
-            <Link to="/login">
-              <Button variant="ghost" size="sm">
-                <User className="h-5 w-5" />
-              </Button>
-            </Link>
+            
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link to="/orders">My Orders</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/login">
+                <Button variant="ghost" size="sm">
+                  <User className="h-5 w-5" />
+                </Button>
+              </Link>
+            )}
+            
             <Link to="/wishlist">
               <Button variant="ghost" size="sm" className="relative">
                 <Heart className="h-5 w-5" />
@@ -105,6 +146,7 @@ const Header = () => {
                 )}
               </Button>
             </Link>
+            
             <Link to="/cart">
               <Button variant="ghost" size="sm" className="relative">
                 <ShoppingBag className="h-5 w-5" />

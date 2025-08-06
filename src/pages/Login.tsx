@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Eye, EyeOff, User, Mail, Lock } from 'lucide-react';
+import { login, signup } from '@/services/localStorage';
+import { useAuth } from '@/hooks/useLocalStorage';
 import { useToast } from '@/hooks/use-toast';
 
 interface LoginErrors {
@@ -37,6 +39,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { refreshAuth } = useAuth();
 
   const [loginData, setLoginData] = useState({
     email: '',
@@ -87,15 +90,13 @@ const Login = () => {
 
     // Simulate API call
     setTimeout(() => {
-      // Mock authentication - in real app, this would be an API call
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const user = users.find((u: any) => u.email === loginData.email && u.password === loginData.password);
+      const user = login(loginData.email, loginData.password);
 
       if (user) {
-        localStorage.setItem('currentUser', JSON.stringify(user));
         if (rememberMe) {
           localStorage.setItem('rememberUser', 'true');
         }
+        refreshAuth();
         toast({
           title: 'Login Successful!',
           description: `Welcome back, ${user.name}!`
@@ -148,32 +149,20 @@ const Login = () => {
 
     // Simulate API call
     setTimeout(() => {
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const existingUser = users.find((u: any) => u.email === signupData.email);
+      const user = signup(signupData.name, signupData.email, signupData.password);
 
-      if (existingUser) {
+      if (user) {
+        refreshAuth();
+        toast({
+          title: 'Account Created!',
+          description: `Welcome to Vasanti Textiles, ${user.name}!`
+        });
+        navigate('/');
+      } else {
         setErrors(prev => ({ 
           ...prev, 
           signup: { email: 'This email is already registered' }
         }));
-      } else {
-        const newUser = {
-          id: Date.now(),
-          name: signupData.name,
-          email: signupData.email,
-          password: signupData.password,
-          createdAt: new Date().toISOString()
-        };
-
-        users.push(newUser);
-        localStorage.setItem('users', JSON.stringify(users));
-        localStorage.setItem('currentUser', JSON.stringify(newUser));
-
-        toast({
-          title: 'Account Created!',
-          description: `Welcome to Vasanti Textiles, ${newUser.name}!`
-        });
-        navigate('/');
       }
       setIsLoading(false);
     }, 1000);

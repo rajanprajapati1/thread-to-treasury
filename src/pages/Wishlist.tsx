@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -8,61 +8,47 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Heart, ShoppingCart, Trash2, Star } from 'lucide-react';
+import { getWishlist, removeFromWishlist, addToCart, type Product } from '@/services/localStorage';
+import { useWishlist, useCart } from '@/hooks/useLocalStorage';
+import { useToast } from '@/hooks/use-toast';
 
 const Wishlist = () => {
-  const [wishlistItems, setWishlistItems] = useState([
-    {
-      id: 1,
-      name: 'Elegant Silk Saree',
-      price: 2999,
-      originalPrice: 4999,
-      image: 'https://images.unsplash.com/photo-1583391733956-6c78276477e3?w=400&h=600&fit=crop',
-      category: 'Sarees',
-      inStock: true,
-      rating: 4.8,
-      reviews: 124,
-      bestseller: true
-    },
-    {
-      id: 2,
-      name: 'Designer Cotton Suit',
-      price: 1899,
-      originalPrice: 2999,
-      image: 'https://images.unsplash.com/photo-1594736797933-d0401ba9b0b6?w=400&h=600&fit=crop',
-      category: 'Suits',
-      inStock: true,
-      rating: 4.6,
-      reviews: 89,
-      new: true
-    },
-    {
-      id: 3,
-      name: 'Georgette Party Wear',
-      price: 3499,
-      originalPrice: 5499,
-      image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=400&h=600&fit=crop',
-      category: 'Suits',
-      inStock: false,
-      rating: 4.9,
-      reviews: 156,
-      bestseller: true
-    },
-    {
-      id: 4,
-      name: 'Traditional Cotton Saree',
-      price: 1299,
-      originalPrice: 1999,
-      image: 'https://images.unsplash.com/photo-1583391733956-6c78276477e3?w=400&h=600&fit=crop',
-      category: 'Sarees',
-      inStock: true,
-      rating: 4.4,
-      reviews: 67,
-      new: false
-    }
-  ]);
+  const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
+  const { refreshWishlist } = useWishlist();
+  const { refreshCart } = useCart();
+  const { toast } = useToast();
 
-  const removeFromWishlist = (id: number) => {
-    setWishlistItems(wishlistItems.filter(item => item.id !== id));
+  useEffect(() => {
+    setWishlistItems(getWishlist());
+  }, []);
+
+  const handleRemoveFromWishlist = (id: number) => {
+    removeFromWishlist(id);
+    setWishlistItems(getWishlist());
+    refreshWishlist();
+    toast({
+      title: "Removed from Wishlist",
+      description: "Item has been removed from your wishlist.",
+    });
+  };
+
+  const handleAddToCart = (product: Product) => {
+    addToCart(product);
+    refreshCart();
+    toast({
+      title: "Added to Cart",
+      description: `${product.name} has been added to your cart.`,
+    });
+  };
+
+  const clearWishlist = () => {
+    wishlistItems.forEach(item => removeFromWishlist(item.id));
+    setWishlistItems([]);
+    refreshWishlist();
+    toast({
+      title: "Wishlist Cleared",
+      description: "All items have been removed from your wishlist.",
+    });
   };
 
   if (wishlistItems.length === 0) {
@@ -107,7 +93,7 @@ const Wishlist = () => {
           
           <Button 
             variant="outline" 
-            onClick={() => setWishlistItems([])}
+            onClick={clearWishlist}
             disabled={wishlistItems.length === 0}
           >
             Clear All
@@ -150,7 +136,7 @@ const Wishlist = () => {
                   variant="ghost"
                   size="sm"
                   className="absolute top-3 right-3 bg-white/80 hover:bg-white text-red-500 hover:text-red-600"
-                  onClick={() => removeFromWishlist(item.id)}
+                  onClick={() => handleRemoveFromWishlist(item.id)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -165,37 +151,42 @@ const Wishlist = () => {
                 
                 <p className="text-sm text-brand-charcoal/60 mb-2">{item.category}</p>
                 
-                <div className="flex items-center gap-1 mb-2">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star 
-                        key={i} 
-                        className={`h-3 w-3 ${
-                          i < Math.floor(item.rating) 
-                            ? 'text-yellow-400 fill-current' 
-                            : 'text-gray-300'
-                        }`} 
-                      />
-                    ))}
+                {item.rating && (
+                  <div className="flex items-center gap-1 mb-2">
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i} 
+                          className={`h-3 w-3 ${
+                            i < Math.floor(item.rating!) 
+                              ? 'text-yellow-400 fill-current' 
+                              : 'text-gray-300'
+                          }`} 
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs text-brand-charcoal/60">
+                      ({item.reviews})
+                    </span>
                   </div>
-                  <span className="text-xs text-brand-charcoal/60">
-                    ({item.reviews})
-                  </span>
-                </div>
+                )}
                 
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-lg font-semibold text-brand-terracotta">
                     ₹{item.price.toLocaleString()}
                   </span>
-                  <span className="text-sm text-brand-charcoal/60 line-through">
-                    ₹{item.originalPrice.toLocaleString()}
-                  </span>
+                  {item.originalPrice && item.originalPrice > item.price && (
+                    <span className="text-sm text-brand-charcoal/60 line-through">
+                      ₹{item.originalPrice.toLocaleString()}
+                    </span>
+                  )}
                 </div>
                 
                 <div className="flex gap-2">
                   <Button 
                     className="flex-1" 
                     size="sm"
+                    onClick={() => handleAddToCart(item)}
                     disabled={!item.inStock}
                   >
                     <ShoppingCart className="mr-2 h-4 w-4" />
@@ -204,7 +195,7 @@ const Wishlist = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => removeFromWishlist(item.id)}
+                    onClick={() => handleRemoveFromWishlist(item.id)}
                     className="text-red-500 hover:text-red-600 hover:border-red-300"
                   >
                     <Heart className="h-4 w-4" />

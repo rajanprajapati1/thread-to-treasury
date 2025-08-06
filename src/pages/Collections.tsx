@@ -1,127 +1,106 @@
 
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import { Heart, Filter, Grid, List, Star } from 'lucide-react';
-
-// Mock product data
-const products = [
-  {
-    id: 1,
-    name: 'Elegant Silk Saree',
-    price: 2999,
-    originalPrice: 4999,
-    image: 'https://images.unsplash.com/photo-1583391733956-6c78276477e3?w=400&h=600&fit=crop',
-    category: 'sarees',
-    fabric: 'silk',
-    occasion: 'wedding',
-    color: 'red',
-    rating: 4.8,
-    reviews: 124,
-    bestseller: true
-  },
-  {
-    id: 2,
-    name: 'Designer Cotton Suit',
-    price: 1899,
-    originalPrice: 2999,
-    image: 'https://images.unsplash.com/photo-1594736797933-d0401ba9b0b6?w=400&h=600&fit=crop',
-    category: 'suits',
-    fabric: 'cotton',
-    occasion: 'festive',
-    color: 'blue',
-    rating: 4.6,
-    reviews: 89,
-    new: true
-  },
-  {
-    id: 3,
-    name: 'Georgette Party Wear',
-    price: 3499,
-    originalPrice: 5499,
-    image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=400&h=600&fit=crop',
-    category: 'suits',
-    fabric: 'georgette',
-    occasion: 'party',
-    color: 'pink',
-    rating: 4.9,
-    reviews: 156,
-    bestseller: true
-  },
-  {
-    id: 4,
-    name: 'Traditional Cotton Saree',
-    price: 1299,
-    originalPrice: 1999,
-    image: 'https://images.unsplash.com/photo-1583391733956-6c78276477e3?w=400&h=600&fit=crop',
-    category: 'sarees',
-    fabric: 'cotton',
-    occasion: 'daily',
-    color: 'green',
-    rating: 4.4,
-    reviews: 67,
-    new: false
-  },
-  {
-    id: 5,
-    name: 'Chiffon Wedding Saree',
-    price: 4999,
-    originalPrice: 7999,
-    image: 'https://images.unsplash.com/photo-1583391733956-6c78276477e3?w=400&h=600&fit=crop',
-    category: 'sarees',
-    fabric: 'chiffon',
-    occasion: 'wedding',
-    color: 'gold',
-    rating: 4.7,
-    reviews: 203,
-    bestseller: true
-  },
-  {
-    id: 6,
-    name: 'Office Wear Suit',
-    price: 2199,
-    originalPrice: 3499,
-    image: 'https://images.unsplash.com/photo-1594736797933-d0401ba9b0b6?w=400&h=600&fit=crop',
-    category: 'suits',
-    fabric: 'cotton',
-    occasion: 'office',
-    color: 'navy',
-    rating: 4.5,
-    reviews: 92,
-    new: false
-  }
-];
+import { Heart, ShoppingCart, Star, Filter, Grid3X3, Grid2X2 } from 'lucide-react';
+import { getSampleProducts, addToCart, addToWishlist, removeFromWishlist, isInWishlist, type Product } from '@/services/localStorage';
+import { useCart, useWishlist } from '@/hooks/useLocalStorage';
+import { useToast } from '@/hooks/use-toast';
 
 const Collections = () => {
   const { category } = useParams();
-  const [priceRange, setPriceRange] = useState([0, 10000]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [viewMode, setViewMode] = useState<'grid-3' | 'grid-2'>('grid-3');
+  const [sortBy, setSortBy] = useState('featured');
+  const [priceRange, setPriceRange] = useState([0, 15000]);
   const [selectedFabrics, setSelectedFabrics] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
-  const [selectedOccasions, setSelectedOccasions] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState('popularity');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const { refreshCart } = useCart();
+  const { refreshWishlist } = useWishlist();
+  const { toast } = useToast();
 
-  const fabrics = ['Cotton', 'Silk', 'Chiffon', 'Georgette', 'Crepe'];
-  const colors = ['Red', 'Blue', 'Pink', 'Green', 'Gold', 'Navy', 'Black', 'White'];
-  const occasions = ['Wedding', 'Festive', 'Party', 'Office', 'Daily'];
+  useEffect(() => {
+    const allProducts = getSampleProducts();
+    setProducts(allProducts);
+    
+    let filtered = allProducts;
+    
+    // Filter by category if specified
+    if (category) {
+      filtered = filtered.filter(product => 
+        product.category.toLowerCase() === category.toLowerCase()
+      );
+    }
+    
+    // Apply other filters
+    filtered = filtered.filter(product => {
+      const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
+      const searchMatch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+      return priceMatch && searchMatch;
+    });
+    
+    // Apply sorting
+    switch (sortBy) {
+      case 'price-low':
+        filtered.sort((a, b) => a.price - b.price);
+        break;
+      case 'price-high':
+        filtered.sort((a, b) => b.price - a.price);
+        break;
+      case 'newest':
+        filtered.sort((a, b) => (b.new ? 1 : 0) - (a.new ? 1 : 0));
+        break;
+      case 'bestselling':
+        filtered.sort((a, b) => (b.bestseller ? 1 : 0) - (a.bestseller ? 1 : 0));
+        break;
+    }
+    
+    setFilteredProducts(filtered);
+  }, [category, sortBy, priceRange, searchQuery]);
 
-  const filteredProducts = products.filter(product => {
-    if (category && product.category !== category) return false;
-    if (product.price < priceRange[0] || product.price > priceRange[1]) return false;
-    if (selectedFabrics.length && !selectedFabrics.includes(product.fabric)) return false;
-    if (selectedColors.length && !selectedColors.includes(product.color)) return false;
-    if (selectedOccasions.length && !selectedOccasions.includes(product.occasion)) return false;
-    return true;
-  });
+  const handleAddToCart = (product: Product) => {
+    addToCart(product);
+    refreshCart();
+    toast({
+      title: "Added to Cart",
+      description: `${product.name} has been added to your cart.`,
+    });
+  };
+
+  const handleWishlistToggle = (product: Product) => {
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+      toast({
+        title: "Removed from Wishlist",
+        description: `${product.name} has been removed from your wishlist.`,
+      });
+    } else {
+      addToWishlist(product);
+      toast({
+        title: "Added to Wishlist",
+        description: `${product.name} has been added to your wishlist.`,
+      });
+    }
+    refreshWishlist();
+  };
+
+  const getCategoryTitle = () => {
+    if (category) {
+      return category.charAt(0).toUpperCase() + category.slice(1);
+    }
+    return 'All Collections';
+  };
 
   return (
     <div className="min-h-screen bg-brand-warm-white">
@@ -136,184 +115,110 @@ const Collections = () => {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage className="capitalize">
-                {category ? category : 'All Collections'}
-              </BreadcrumbPage>
+              <BreadcrumbLink href="/collections">Collections</BreadcrumbLink>
             </BreadcrumbItem>
+            {category && (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{getCategoryTitle()}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
+            )}
           </BreadcrumbList>
         </Breadcrumb>
 
-        {/* Page Header */}
-        <div className="flex justify-between items-center mb-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-serif font-bold text-brand-charcoal capitalize">
-              {category ? category : 'All Collections'}
+            <h1 className="text-3xl font-serif font-bold text-brand-charcoal mb-2">
+              {getCategoryTitle()}
             </h1>
-            <p className="text-brand-charcoal/70 mt-2">
+            <p className="text-brand-charcoal/70">
               {filteredProducts.length} products found
             </p>
           </div>
           
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className="md:hidden"
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-            </Button>
-            
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4 mt-4 md:mt-0">
+            {/* View Mode Toggle */}
+            <div className="flex border border-brand-sage/30 rounded-md">
               <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
+                variant={viewMode === 'grid-3' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setViewMode('grid')}
+                onClick={() => setViewMode('grid-3')}
               >
-                <Grid className="h-4 w-4" />
+                <Grid3X3 className="h-4 w-4" />
               </Button>
               <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
+                variant={viewMode === 'grid-2' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setViewMode('list')}
+                onClick={() => setViewMode('grid-2')}
               >
-                <List className="h-4 w-4" />
+                <Grid2X2 className="h-4 w-4" />
               </Button>
             </div>
             
+            {/* Sort Dropdown */}
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="popularity">Popularity</SelectItem>
+                <SelectItem value="featured">Featured</SelectItem>
+                <SelectItem value="bestselling">Best Selling</SelectItem>
+                <SelectItem value="newest">Newest</SelectItem>
                 <SelectItem value="price-low">Price: Low to High</SelectItem>
                 <SelectItem value="price-high">Price: High to Low</SelectItem>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="rating">Customer Rating</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
-        <div className="flex gap-8">
+        <div className="grid lg:grid-cols-4 gap-8">
           {/* Filters Sidebar */}
-          <div className={`${showFilters ? 'block' : 'hidden'} md:block w-64 flex-shrink-0`}>
-            <Card className="sticky top-4">
+          <div className="lg:col-span-1">
+            <Card>
               <CardContent className="p-6">
-                <h3 className="font-semibold text-brand-charcoal mb-4">Filters</h3>
+                <div className="flex items-center gap-2 mb-6">
+                  <Filter className="h-4 w-4" />
+                  <h3 className="font-semibold">Filters</h3>
+                </div>
+                
+                {/* Search */}
+                <div className="mb-6">
+                  <label className="text-sm font-medium mb-2 block">Search</label>
+                  <Input
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
                 
                 {/* Price Range */}
                 <div className="mb-6">
-                  <h4 className="font-medium mb-3">Price Range</h4>
+                  <label className="text-sm font-medium mb-2 block">
+                    Price Range: ₹{priceRange[0]} - ₹{priceRange[1]}
+                  </label>
                   <Slider
                     value={priceRange}
                     onValueChange={setPriceRange}
-                    max={10000}
+                    max={15000}
                     min={0}
-                    step={100}
+                    step={500}
                     className="mb-2"
                   />
-                  <div className="flex justify-between text-sm text-brand-charcoal/70">
-                    <span>₹{priceRange[0]}</span>
-                    <span>₹{priceRange[1]}</span>
-                  </div>
                 </div>
-
-                {/* Fabric Filter */}
-                <div className="mb-6">
-                  <h4 className="font-medium mb-3">Fabric</h4>
-                  <div className="space-y-2">
-                    {fabrics.map((fabric) => (
-                      <div key={fabric} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={fabric}
-                          checked={selectedFabrics.includes(fabric.toLowerCase())}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedFabrics([...selectedFabrics, fabric.toLowerCase()]);
-                            } else {
-                              setSelectedFabrics(selectedFabrics.filter(f => f !== fabric.toLowerCase()));
-                            }
-                          }}
-                        />
-                        <label htmlFor={fabric} className="text-sm">{fabric}</label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Color Filter */}
-                <div className="mb-6">
-                  <h4 className="font-medium mb-3">Color</h4>
-                  <div className="space-y-2">
-                    {colors.map((color) => (
-                      <div key={color} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={color}
-                          checked={selectedColors.includes(color.toLowerCase())}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedColors([...selectedColors, color.toLowerCase()]);
-                            } else {
-                              setSelectedColors(selectedColors.filter(c => c !== color.toLowerCase()));
-                            }
-                          }}
-                        />
-                        <label htmlFor={color} className="text-sm">{color}</label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Occasion Filter */}
-                <div className="mb-6">
-                  <h4 className="font-medium mb-3">Occasion</h4>
-                  <div className="space-y-2">
-                    {occasions.map((occasion) => (
-                      <div key={occasion} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={occasion}
-                          checked={selectedOccasions.includes(occasion.toLowerCase())}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedOccasions([...selectedOccasions, occasion.toLowerCase()]);
-                            } else {
-                              setSelectedOccasions(selectedOccasions.filter(o => o !== occasion.toLowerCase()));
-                            }
-                          }}
-                        />
-                        <label htmlFor={occasion} className="text-sm">{occasion}</label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full"
-                  onClick={() => {
-                    setPriceRange([0, 10000]);
-                    setSelectedFabrics([]);
-                    setSelectedColors([]);
-                    setSelectedOccasions([]);
-                  }}
-                >
-                  Clear All Filters
-                </Button>
               </CardContent>
             </Card>
           </div>
 
           {/* Products Grid */}
-          <div className="flex-1">
-            <div className={`grid gap-6 ${
-              viewMode === 'grid' 
+          <div className="lg:col-span-3">
+            <div className={`grid ${
+              viewMode === 'grid-3' 
                 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
-                : 'grid-cols-1'
-            }`}>
+                : 'grid-cols-1 md:grid-cols-2'
+            } gap-6`}>
               {filteredProducts.map((product) => (
                 <Card key={product.id} className="group hover:shadow-lg transition-shadow duration-300">
                   <div className="relative overflow-hidden">
@@ -337,70 +242,97 @@ const Collections = () => {
                           New
                         </Badge>
                       )}
+                      {!product.inStock && (
+                        <Badge variant="secondary" className="bg-gray-500 text-white">
+                          Out of Stock
+                        </Badge>
+                      )}
                     </div>
                     
                     {/* Wishlist Button */}
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="absolute top-3 right-3 bg-white/80 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      className={`absolute top-3 right-3 bg-white/80 hover:bg-white transition-colors ${
+                        isInWishlist(product.id) 
+                          ? 'text-red-500 hover:text-red-600' 
+                          : 'text-gray-400 hover:text-red-500'
+                      }`}
+                      onClick={() => handleWishlistToggle(product)}
                     >
-                      <Heart className="h-4 w-4" />
+                      <Heart className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
                     </Button>
                   </div>
                   
                   <CardContent className="p-4">
                     <Link to={`/product/${product.id}`}>
-                      <h3 className="font-medium text-brand-charcoal group-hover:text-brand-terracotta transition-colors">
+                      <h3 className="font-medium text-brand-charcoal group-hover:text-brand-terracotta transition-colors mb-1">
                         {product.name}
                       </h3>
                     </Link>
                     
-                    <div className="flex items-center gap-1 mt-1">
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <Star 
-                            key={i} 
-                            className={`h-3 w-3 ${
-                              i < Math.floor(product.rating) 
-                                ? 'text-yellow-400 fill-current' 
-                                : 'text-gray-300'
-                            }`} 
-                          />
-                        ))}
-                      </div>
-                      <span className="text-xs text-brand-charcoal/60">
-                        ({product.reviews})
-                      </span>
-                    </div>
+                    <p className="text-sm text-brand-charcoal/60 mb-2">{product.category}</p>
                     
-                    <div className="flex items-center gap-2 mt-2">
+                    {product.rating && (
+                      <div className="flex items-center gap-1 mb-2">
+                        <div className="flex">
+                          {[...Array(5)].map((_, i) => (
+                            <Star 
+                              key={i} 
+                              className={`h-3 w-3 ${
+                                i < Math.floor(product.rating!) 
+                                  ? 'text-yellow-400 fill-current' 
+                                  : 'text-gray-300'
+                              }`} 
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs text-brand-charcoal/60">
+                          ({product.reviews})
+                        </span>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center gap-2 mb-3">
                       <span className="text-lg font-semibold text-brand-terracotta">
                         ₹{product.price.toLocaleString()}
                       </span>
-                      <span className="text-sm text-brand-charcoal/60 line-through">
-                        ₹{product.originalPrice.toLocaleString()}
-                      </span>
+                      {product.originalPrice && product.originalPrice > product.price && (
+                        <span className="text-sm text-brand-charcoal/60 line-through">
+                          ₹{product.originalPrice.toLocaleString()}
+                        </span>
+                      )}
                     </div>
                     
-                    <Button className="w-full mt-3" size="sm">
-                      Add to Cart
+                    <Button 
+                      className="w-full" 
+                      size="sm"
+                      onClick={() => handleAddToCart(product)}
+                      disabled={!product.inStock}
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      {product.inStock ? 'Add to Cart' : 'Out of Stock'}
                     </Button>
                   </CardContent>
                 </Card>
               ))}
             </div>
-            
-            {/* Pagination */}
-            <div className="flex justify-center mt-12">
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">Previous</Button>
-                <Button variant="default" size="sm">1</Button>
-                <Button variant="outline" size="sm">2</Button>
-                <Button variant="outline" size="sm">3</Button>
-                <Button variant="outline" size="sm">Next</Button>
+
+            {filteredProducts.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-lg text-brand-charcoal/60">No products found matching your criteria.</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setPriceRange([0, 15000]);
+                  }}
+                >
+                  Clear Filters
+                </Button>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

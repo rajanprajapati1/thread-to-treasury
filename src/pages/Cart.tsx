@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -9,56 +9,97 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Trash2, Plus, Minus, ShoppingBag, Truck, Shield, Tag } from 'lucide-react';
+import { getCart, updateCartQuantity, removeFromCart, clearCart, createOrder, type CartItem } from '@/services/localStorage';
+import { useCart, useAuth } from '@/hooks/useLocalStorage';
+import { useToast } from '@/hooks/use-toast';
 
 const Cart = () => {
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: 'Elegant Silk Saree',
-      price: 2999,
-      originalPrice: 4999,
-      image: 'https://images.unsplash.com/photo-1583391733956-6c78276477e3?w=150&h=200&fit=crop',
-      quantity: 1,
-      size: 'One Size',
-      color: 'Deep Red'
-    },
-    {
-      id: 2,
-      name: 'Designer Cotton Suit',
-      price: 1899,
-      originalPrice: 2999,
-      image: 'https://images.unsplash.com/photo-1594736797933-d0401ba9b0b6?w=150&h=200&fit=crop',
-      quantity: 2,
-      size: 'M',
-      color: 'Blue'
-    }
-  ]);
-
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  
+  const { refreshCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const updateQuantity = (id: number, newQuantity: number) => {
-    if (newQuantity === 0) {
-      setCartItems(cartItems.filter(item => item.id !== id));
-    } else {
-      setCartItems(cartItems.map(item => 
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      ));
-    }
+  useEffect(() => {
+    setCartItems(getCart());
+  }, []);
+
+  const handleUpdateQuantity = (id: number, newQuantity: number) => {
+    updateCartQuantity(id, newQuantity);
+    setCartItems(getCart());
+    refreshCart();
   };
 
-  const removeItem = (id: number) => {
-    setCartItems(cartItems.filter(item => item.id !== id));
+  const handleRemoveItem = (id: number) => {
+    removeFromCart(id);
+    setCartItems(getCart());
+    refreshCart();
+    toast({
+      title: "Item Removed",
+      description: "Item has been removed from your cart.",
+    });
+  };
+
+  const handleClearCart = () => {
+    clearCart();
+    setCartItems([]);
+    refreshCart();
+    toast({
+      title: "Cart Cleared",
+      description: "All items have been removed from your cart.",
+    });
   };
 
   const applyCoupon = () => {
     if (couponCode.toUpperCase() === 'SAVE10') {
       setDiscount(10);
+      toast({
+        title: "Coupon Applied",
+        description: "10% discount applied successfully!",
+      });
     } else if (couponCode.toUpperCase() === 'FIRST20') {
       setDiscount(20);
+      toast({
+        title: "Coupon Applied",
+        description: "20% discount applied successfully!",
+      });
     } else {
       setDiscount(0);
+      toast({
+        title: "Invalid Coupon",
+        description: "The coupon code you entered is not valid.",
+        variant: "destructive",
+      });
     }
+  };
+
+  const handleCheckout = () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    setIsCheckingOut(true);
+    
+    // Simulate checkout process
+    setTimeout(() => {
+      const order = createOrder(cartItems);
+      clearCart();
+      setCartItems([]);
+      refreshCart();
+      
+      toast({
+        title: "Order Placed Successfully!",
+        description: `Your order ${order.id} has been placed.`,
+      });
+      
+      navigate('/orders');
+      setIsCheckingOut(false);
+    }, 2000);
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -125,7 +166,7 @@ const Cart = () => {
                         <div>
                           <h3 className="font-medium text-brand-charcoal">{item.name}</h3>
                           <div className="text-sm text-brand-charcoal/70 mt-1">
-                            <span>Size: {item.size}</span> • <span>Color: {item.color}</span>
+                            <span>Category: {item.category}</span>
                           </div>
                         </div>
                         
@@ -133,9 +174,11 @@ const Cart = () => {
                           <span className="text-lg font-semibold text-brand-terracotta">
                             ₹{item.price.toLocaleString()}
                           </span>
-                          <span className="text-sm text-brand-charcoal/60 line-through">
-                            ₹{item.originalPrice.toLocaleString()}
-                          </span>
+                          {item.originalPrice && item.originalPrice > item.price && (
+                            <span className="text-sm text-brand-charcoal/60 line-through">
+                              ₹{item.originalPrice.toLocaleString()}
+                            </span>
+                          )}
                         </div>
                         
                         <div className="flex items-center justify-between">
@@ -143,7 +186,7 @@ const Cart = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                             >
                               <Minus className="h-4 w-4" />
                             </Button>
@@ -151,7 +194,7 @@ const Cart = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
                             >
                               <Plus className="h-4 w-4" />
                             </Button>
@@ -160,7 +203,7 @@ const Cart = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => removeItem(item.id)}
+                            onClick={() => handleRemoveItem(item.id)}
                             className="text-red-500 hover:text-red-700 hover:bg-red-50"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -181,7 +224,7 @@ const Cart = () => {
                   <Button variant="outline" asChild>
                     <Link to="/collections">Continue Shopping</Link>
                   </Button>
-                  <Button variant="outline" onClick={() => setCartItems([])}>
+                  <Button variant="outline" onClick={handleClearCart}>
                     Clear Cart
                   </Button>
                 </div>
@@ -264,8 +307,13 @@ const Cart = () => {
                   </div>
                 </div>
                 
-                <Button className="w-full" size="lg">
-                  Proceed to Checkout
+                <Button 
+                  className="w-full" 
+                  size="lg" 
+                  onClick={handleCheckout}
+                  disabled={isCheckingOut}
+                >
+                  {isCheckingOut ? 'Processing...' : 'Proceed to Checkout'}
                 </Button>
                 
                 <p className="text-xs text-center text-brand-charcoal/60">

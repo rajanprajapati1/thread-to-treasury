@@ -54,7 +54,7 @@ const Hero = () => {
               <img
                 src="https://manyavar.scene7.com/is/image/manyavar/SB17561_434-LIGHT+BLUE_301.20248_04-09-2024-16-27:283x395?&dpr=on,2"
                 alt="Beautiful handcrafted saree"
-                className="w-full h-[500px] object-cover"
+                className="w-full h-[500px] object-cover object-top"
               />
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6">
                 <p className="text-white text-lg font-medium">Handcrafted Silk Saree</p>
